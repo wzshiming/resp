@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	_ "github.com/wzshiming/winseq"
@@ -53,7 +54,7 @@ func (c *Terminal) Run() error {
 			return err
 		}
 
-		read := csv.NewReader(bytes.NewBufferString(line))
+		read := csv.NewReader(bytes.NewBufferString(strings.TrimSpace(line)))
 		read.Comma = ' '
 		read.TrimLeadingSpace = true
 		da, err := read.ReadAll()
