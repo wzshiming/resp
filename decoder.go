@@ -117,12 +117,14 @@ func (r *Decoder) decodeBulk() (Reply, error) {
 		// The returned interface is not nil but the data inside is nil
 		return (ReplyBulk)(nil), nil
 	}
-	line, err := r.decodeLine()
+	buf := make([]byte, num)
+	_, err = io.ReadAtLeast(r.reader, buf, int(num))
 	if err != nil {
 		return nil, err
 	}
-	if l := int64(len(line)); l < num {
-		num = l
+	_, err = r.decodeLine()
+	if err != nil {
+		return nil, err
 	}
-	return ReplyBulk(line[:num]), nil
+	return ReplyBulk(buf), nil
 }
