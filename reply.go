@@ -52,10 +52,14 @@ func (r ReplyBulk) Format(level uint8) string {
 }
 func (r ReplyMultiBulk) Format(level uint8) string {
 	ss := make([]string, 0, len(r))
-	lev := strings.Repeat(" ", int(level))
+	lev := strings.Repeat("   ", int(level))
 	for i, v := range r {
 		text := v.Format(level + 1)
-		ss = append(ss, fmt.Sprintf("%s%d) %s", lev, i, text))
+		le := lev
+		if i == 0 {
+			le = ""
+		}
+		ss = append(ss, fmt.Sprintf("%s%d) %s", le, i, text))
 	}
 	out := strings.Join(ss, "\n")
 	return out
