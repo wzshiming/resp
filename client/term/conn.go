@@ -13,17 +13,10 @@ func Run(addr string) error {
 		return err
 	}
 
-	conn, err := Conn(cli)
-	if err != nil {
-		return err
-	}
-	
-	
-
-	return NewTerminal(fmt.Sprintf("\rRESP %s> ", addr), NewExtra(conn).Cmd).Run()
+	return NewTerminal(fmt.Sprintf("RESP %s> ", addr), NewExtra(commands(cli)).Cmd).Run()
 }
 
-func Conn(cli *client.Connect) (CmdFunc, error) {
+func commands(cli *client.Connect) CmdFunc {
 	return func(cmd ...string) (string, error) {
 		if len(cmd) == 0 {
 			return "", nil
@@ -34,6 +27,5 @@ func Conn(cli *client.Connect) (CmdFunc, error) {
 			return "", err
 		}
 		return val.Format(0), nil
-
-	}, nil
+	}
 }
