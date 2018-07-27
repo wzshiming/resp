@@ -6,11 +6,13 @@ import (
 	"github.com/wzshiming/resp"
 )
 
+// Connect It's a client connection.
 type Connect struct {
 	decoder *resp.Decoder
 	encoder *resp.Encoder
 }
 
+// NewConnect Create a new connect.
 func NewConnect(address string) (*Connect, error) {
 	conn, err := net.Dial("tcp", address)
 	if err != nil {

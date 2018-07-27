@@ -8,10 +8,12 @@ import (
 	"unsafe"
 )
 
+// Decoder It's a resp decoder
 type Decoder struct {
 	reader *bufio.Reader
 }
 
+// NewDecoder Create a new resp decoder.
 func NewDecoder(reader io.Reader) *Decoder {
 	bufread, ok := reader.(*bufio.Reader)
 	if !ok {
@@ -23,6 +25,7 @@ func NewDecoder(reader io.Reader) *Decoder {
 	return p
 }
 
+// Encode returns decode the reply from reader.
 func (r *Decoder) Decode() (Reply, error) {
 	return r.decodeData()
 }

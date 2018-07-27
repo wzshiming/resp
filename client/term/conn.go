@@ -7,6 +7,7 @@ import (
 	"github.com/wzshiming/resp/client"
 )
 
+// Run is run service
 func Run(addr string) error {
 	cli, err := client.NewConnect(addr)
 	if err != nil {

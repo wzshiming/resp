@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// Extra is Additional terminal commands
 type Extra struct {
 	Map   map[string]CmdFunc
 	Other CmdFunc
@@ -25,6 +26,7 @@ func (e *Extra) AddCmd(name string, fun CmdFunc) {
 	e.Map[strings.ToLower(name)] = fun
 }
 
+// NewExtra Create a new extra.
 func NewExtra(other CmdFunc) *Extra {
 	e := &Extra{
 		Map:   map[string]CmdFunc{},

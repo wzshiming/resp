@@ -6,6 +6,7 @@ import (
 	"unsafe"
 )
 
+// The signature of the RESP protocol
 const (
 	Status    = '+'
 	Error     = '-'
@@ -19,15 +20,25 @@ var (
 	nilVal = []byte{'-', '1'}
 )
 
+// Reply is Data kind interface
 type Reply interface {
 	replyNode()
 	Format(level uint8) string
 }
 
+// ReplyBulk Is could be any data of reply
 type ReplyBulk []byte
+
+// ReplyMultiBulk Is an array of multiple reply
 type ReplyMultiBulk []Reply
+
+// ReplyInteger is has to be integer of reply
 type ReplyInteger []byte
+
+// ReplyStatus is has to be a row of status reply
 type ReplyStatus []byte
+
+// ReplyError is has to be a row of error reply
 type ReplyError []byte
 
 func (r ReplyBulk) replyNode()      {}

@@ -7,10 +7,12 @@ import (
 	"strconv"
 )
 
+// Encoder It's a resp encoder.
 type Encoder struct {
 	writer *bufio.Writer
 }
 
+// NewEncoder Create a new resp encoder.
 func NewEncoder(writer io.Writer) *Encoder {
 	bufwrite, ok := writer.(*bufio.Writer)
 	if !ok {
@@ -22,6 +24,7 @@ func NewEncoder(writer io.Writer) *Encoder {
 	return p
 }
 
+// Encode is encode the reply to writer.
 func (w *Encoder) Encode(r Reply) error {
 	err := w.encodeData(r)
 	if err != nil {

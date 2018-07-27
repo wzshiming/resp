@@ -7,6 +7,7 @@ import (
 	"unsafe"
 )
 
+// Convert returns convert the base type to Reply
 func Convert(i interface{}) Reply {
 	val := reflect.ValueOf(i)
 	return convert(val)

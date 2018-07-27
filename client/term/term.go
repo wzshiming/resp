@@ -15,6 +15,7 @@ import (
 
 type CmdFunc func(cmd ...string) (string, error)
 
+// Terminal Is a terminal renderer.
 type Terminal struct {
 	Reader  io.Reader
 	Writer  io.Writer
@@ -22,6 +23,7 @@ type Terminal struct {
 	CmdFunc CmdFunc
 }
 
+// NewTerminal Create a new Terminal.
 func NewTerminal(prompt string, cmd CmdFunc) *Terminal {
 	return &Terminal{
 		Reader:  os.Stdin,
@@ -31,6 +33,7 @@ func NewTerminal(prompt string, cmd CmdFunc) *Terminal {
 	}
 }
 
+// Run Is run the terminal.
 func (c *Terminal) Run() error {
 	ter := terminal.NewTerminal(struct {
 		io.Reader
