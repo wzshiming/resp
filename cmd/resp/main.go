@@ -3,11 +3,20 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/wzshiming/resp/client/term"
 )
 
 func main() {
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), `
+Usage of %s:
+	resp [address]
+`, os.Args[0])
+		flag.PrintDefaults()
+	}
+
 	flag.Parse()
 
 	args := flag.Args()
