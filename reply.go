@@ -2,6 +2,7 @@ package resp
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"unsafe"
 )
@@ -48,7 +49,7 @@ func (r ReplyStatus) replyNode()    {}
 func (r ReplyError) replyNode()     {}
 
 func (r ReplyBulk) Format(level uint8) string {
-	return *(*string)(unsafe.Pointer(&r))
+	return strconv.Quote(*(*string)(unsafe.Pointer(&r)))
 }
 func (r ReplyMultiBulk) Format(level uint8) string {
 	ss := make([]string, 0, len(r))
