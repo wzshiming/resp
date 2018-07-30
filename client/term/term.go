@@ -56,6 +56,7 @@ func (c *Terminal) Run() error {
 
 		read := csv.NewReader(bytes.NewBufferString(strings.TrimSpace(line)))
 		read.Comma = ' '
+		read.LazyQuotes = true
 		read.TrimLeadingSpace = true
 		da, err := read.ReadAll()
 		if err != nil {
