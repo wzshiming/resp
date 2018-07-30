@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
+	prompt "github.com/c-bata/go-prompt"
 	_ "github.com/wzshiming/winseq"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 type CmdFunc func(cmd ...string) (string, error)
@@ -34,26 +34,25 @@ func NewTerminal(prompt string, cmd CmdFunc) *Terminal {
 	}
 }
 
+func completer(d prompt.Document) []prompt.Suggest {
+	s := []prompt.Suggest{
+		{Text: "quit", Description: "quit resp."},
+	}
+	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursorWithSpace(), true)
+}
+
 // Run Is run the terminal.
 func (c *Terminal) Run() error {
-	ter := terminal.NewTerminal(struct {
-		io.Reader
-		io.Writer
-	}{
-		c.Reader,
-		c.Writer,
-	}, "")
 	fmt.Fprintln(c.Writer, welcome)
 	logger := log.New(c.Writer, "", log.LstdFlags)
-	for {
-		line, err := ter.ReadPassword(c.Prompt)
-		if err != nil {
-			if err == io.EOF {
-				continue
-			}
-			return err
-		}
+	pro := prompt.New(func(string) {}, completer,
+		prompt.OptionPrefix(c.Prompt),
+		prompt.OptionPrefixTextColor(prompt.DefaultColor),
+		prompt.OptionPrefixBackgroundColor(prompt.DefaultColor),
+	)
 
+	for {
+		line := pro.Input()
 		read := csv.NewReader(bytes.NewBufferString(strings.TrimSpace(line)))
 		read.Comma = ' '
 		read.LazyQuotes = true
@@ -71,8 +70,8 @@ func (c *Terminal) Run() error {
 				continue
 			}
 			sub := time.Now().Sub(beg).Truncate(time.Millisecond)
-			fmt.Fprintln(ter, result)
-			fmt.Fprintf(ter, "(%s)\n", sub)
+			fmt.Fprintln(c.Writer, result)
+			fmt.Fprintf(c.Writer, "(%s)\n", sub)
 		}
 	}
 	return nil
