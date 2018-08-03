@@ -2,6 +2,7 @@ package resp
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -52,15 +53,26 @@ func (r ReplyBulk) Format(level uint8) string {
 	return strconv.Quote(*(*string)(unsafe.Pointer(&r)))
 }
 func (r ReplyMultiBulk) Format(level uint8) string {
+	if len(r) == 0 {
+		return ""
+	}
 	ss := make([]string, 0, len(r))
 	lev := strings.Repeat("   ", int(level))
+
+	gsp := int(math.Log(float64(len(r))))
 	for i, v := range r {
 		text := v.Format(level + 1)
 		le := lev
 		if i == 0 {
 			le = ""
 		}
-		ss = append(ss, fmt.Sprintf("%s%d) %s", le, i, text))
+
+		sp := i
+		if i != 0 {
+			sp = int(math.Log10(float64(i)))
+		}
+		spr := strings.Repeat(" ", gsp-sp)
+		ss = append(ss, fmt.Sprintf("%s%d)%s%s", le, i, spr, text))
 	}
 	out := strings.Join(ss, "\n")
 	return out
