@@ -59,7 +59,7 @@ func (r ReplyMultiBulk) Format(level uint8) string {
 	ss := make([]string, 0, len(r))
 	lev := strings.Repeat("   ", int(level))
 
-	gsp := int(math.Log(float64(len(r))))
+	gsp := int(math.Log10(math.Max(float64(len(r)-1), 1))) + 1
 	for i, v := range r {
 		text := v.Format(level + 1)
 		le := lev
@@ -67,11 +67,8 @@ func (r ReplyMultiBulk) Format(level uint8) string {
 			le = ""
 		}
 
-		sp := i
-		if i != 0 {
-			sp = int(math.Log10(float64(i)))
-		}
-		spr := strings.Repeat(" ", gsp-sp)
+		spr := strings.Repeat(" ", gsp-int(math.Log10(math.Max(float64(i), 1))))
+
 		ss = append(ss, fmt.Sprintf("%s%d)%s%s", le, i, spr, text))
 	}
 	out := strings.Join(ss, "\n")
