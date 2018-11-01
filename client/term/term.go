@@ -11,7 +11,7 @@ import (
 	"time"
 
 	prompt "github.com/c-bata/go-prompt"
-	_ "github.com/wzshiming/winseq"
+	// _ "github.com/wzshiming/winseq"
 )
 
 type CmdFunc func(cmd ...string) (string, error)
