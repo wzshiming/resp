@@ -35,10 +35,13 @@ func NewTerminal(prompt string, cmd CmdFunc) *Terminal {
 }
 
 func completer(d prompt.Document) []prompt.Suggest {
-	s := []prompt.Suggest{
-		{Text: "quit", Description: "quit resp."},
+	if d.FindStartOfPreviousWord() == 0 {
+		command := []prompt.Suggest{
+			{Text: "quit", Description: "quit resp."},
+		}
+		return prompt.FilterHasPrefix(command, d.GetWordBeforeCursorWithSpace(), true)
 	}
-	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursorWithSpace(), true)
+	return []prompt.Suggest{}
 }
 
 // Run Is run the terminal.
