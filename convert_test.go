@@ -39,9 +39,10 @@ func TestConvertAll(t *testing.T) {
 		Sl []uint
 		Ar [2]int
 		PS *string
+		B  []byte
 	}
 	var ps = "ps"
-	b := tt{"s", 100, map[string]int{"aa": 111}, []uint{1, 2, 3, 4}, [2]int{-1, 2}, &ps}
+	b := tt{"s", 100, map[string]int{"aa": 111}, []uint{1, 2, 3, 4}, [2]int{-1, 2}, &ps, []byte("hello")}
 	tmp, err := ConvertTo(b)
 	if err != nil {
 		t.Fatal(err)
