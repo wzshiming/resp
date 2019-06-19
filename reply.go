@@ -1,6 +1,7 @@
 package resp
 
 import (
+	"bytes"
 	"fmt"
 	"math"
 	"strconv"
@@ -85,4 +86,52 @@ func (r ReplyStatus) Format(level uint8) string {
 func (r ReplyError) Format(level uint8) string {
 	text := append([]byte("(Error) "), r...)
 	return *(*string)(unsafe.Pointer(&text))
+}
+
+// Equal returns a boolean reporting whether a and b
+// are the same length and contain the same Reply.
+func Equal(a, b Reply) bool {
+	switch aa := a.(type) {
+	default:
+		return false
+	case ReplyMultiBulk:
+		bb, ok := b.(ReplyMultiBulk)
+		if !ok {
+			return false
+		}
+		if len(aa) != len(bb) {
+			return false
+		}
+		for i := range aa {
+			if !Equal(aa[i], bb[i]) {
+				return false
+			}
+		}
+		return true
+	case ReplyBulk:
+		bb, ok := b.(ReplyBulk)
+		if !ok {
+			return false
+		}
+		return bytes.Equal([]byte(aa), []byte(bb))
+	case ReplyInteger:
+		bb, ok := b.(ReplyInteger)
+		if !ok {
+			return false
+		}
+		return bytes.Equal([]byte(aa), []byte(bb))
+	case ReplyStatus:
+		bb, ok := b.(ReplyStatus)
+		if !ok {
+			return false
+		}
+		return bytes.Equal([]byte(aa), []byte(bb))
+	case ReplyError:
+		bb, ok := b.(ReplyError)
+		if !ok {
+			return false
+		}
+		return bytes.Equal([]byte(aa), []byte(bb))
+	}
+
 }
