@@ -13,7 +13,12 @@ var convertTestData = map[string]interface{}{
 func TestConvert(t *testing.T) {
 	for k, v := range convertTestData {
 		buf := bytes.NewBuffer(nil)
-		err := NewEncoder(buf).Encode(Convert(v))
+		d, err := ConvertTo(v)
+		if err != nil {
+			t.Fatal(err)
+			return
+		}
+		err = NewEncoder(buf).Encode(d)
 		if err != nil {
 			t.Fatal(err)
 			return
@@ -24,4 +29,29 @@ func TestConvert(t *testing.T) {
 			return
 		}
 	}
+}
+
+func TestConvertAll(t *testing.T) {
+	type tt struct {
+		S  string
+		I  int
+		M  map[string]int
+		Sl []uint
+		Ar [2]int
+		PS *string
+	}
+	var ps = "ps"
+	b := tt{"s", 100, map[string]int{"aa": 111}, []uint{1, 2, 3, 4}, [2]int{-1, 2}, &ps}
+	tmp, err := ConvertTo(b)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	b0 := tt{}
+	err = ConvertFrom(tmp, &b0)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	t.Log(b0)
 }
