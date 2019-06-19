@@ -7,41 +7,210 @@ import (
 	"unsafe"
 )
 
-// Convert returns convert the base type to Reply
-func Convert(i interface{}) Reply {
+func ConvertFrom(r Reply, i interface{}) error {
 	val := reflect.ValueOf(i)
-	return convert(val)
+	return unmarshal(r, val)
 }
 
-func convert(val reflect.Value) Reply {
+func unmarshal(r Reply, val reflect.Value) error {
+	switch val.Kind() {
+	case reflect.Bool:
+		switch b := r.(type) {
+		default:
+			return fmt.Errorf("Error Not a valid Integer value '%s'", b.Format(0))
+		case ReplyInteger:
+			v := *(*string)(unsafe.Pointer(&b))
+			bb, err := strconv.ParseBool(v)
+			if err != nil {
+				return err
+			}
+			val.SetBool(bb)
+			return nil
+		}
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		switch b := r.(type) {
+		default:
+			return fmt.Errorf("Error Not a valid Integer value '%s'", b.Format(0))
+		case ReplyInteger:
+			v := *(*string)(unsafe.Pointer(&b))
+			bb, err := strconv.ParseInt(v, 0, 0)
+			if err != nil {
+				return err
+			}
+			val.SetInt(bb)
+			return nil
+		}
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		switch b := r.(type) {
+		default:
+			return fmt.Errorf("Error Not a valid Integer value '%s'", b.Format(0))
+		case ReplyInteger:
+			v := *(*string)(unsafe.Pointer(&b))
+			bb, err := strconv.ParseUint(v, 0, 0)
+			if err != nil {
+				return err
+			}
+			val.SetUint(bb)
+			return nil
+		}
+
+	case reflect.Interface:
+		if val.IsNil() {
+			return nil
+		}
+		return unmarshal(r, val.Elem())
+
+	case reflect.Ptr:
+		if val.IsNil() {
+			val.Set(reflect.New(val.Type().Elem()))
+		}
+		return unmarshal(r, val.Elem())
+
+	case reflect.Map:
+		switch b := r.(type) {
+		default:
+			return fmt.Errorf("Error Not a valid MultiBulk value '%s'", b.Format(0))
+		case ReplyMultiBulk:
+			if len(b)%2 != 0 {
+				return fmt.Errorf("Error Not a pair")
+			}
+
+			typ := val.Type()
+			if val.IsNil() {
+				val.Set(reflect.MakeMap(typ))
+			}
+			typKey := typ.Key()
+			typValue := typ.Elem()
+			for i := 0; i != len(b); i += 2 {
+				key := reflect.New(typKey)
+				err := unmarshal(b[i], key)
+				if err != nil {
+					return err
+				}
+				value := reflect.New(typValue)
+				err = unmarshal(b[i+1], value)
+				if err != nil {
+					return err
+				}
+				val.SetMapIndex(key.Elem(), value.Elem())
+			}
+			return nil
+		}
+
+	case reflect.Struct:
+		switch b := r.(type) {
+		default:
+			return fmt.Errorf("Error Not a valid MultiBulk value '%s'", b.Format(0))
+		case ReplyMultiBulk:
+			if len(b)%2 != 0 {
+				return fmt.Errorf("Error Not a pair")
+			}
+			var key string
+			rkey := reflect.ValueOf(&key).Elem()
+			for i := 0; i != len(b); i += 2 {
+				err := unmarshal(b[i], rkey)
+				if err != nil {
+					return err
+				}
+				field := val.FieldByName(key)
+				value := reflect.New(field.Type())
+				err = unmarshal(b[i+1], value)
+				if err != nil {
+					return err
+				}
+				field.Set(value.Elem())
+			}
+			return nil
+		}
+
+	case reflect.Slice:
+		switch b := r.(type) {
+		default:
+			return fmt.Errorf("Error Not a valid MultiBulk value '%s'", b.Format(0))
+		case ReplyMultiBulk:
+			cap := val.Cap()
+			if cap < len(b) {
+				val.Set(reflect.MakeSlice(val.Type(), len(b), len(b)))
+			} else {
+				val.SetLen(len(b))
+			}
+			for i, v := range b {
+				err := unmarshal(v, val.Index(i))
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+
+	case reflect.Array:
+		switch b := r.(type) {
+		default:
+			return fmt.Errorf("Error Not a valid MultiBulk value '%s'", b.Format(0))
+		case ReplyMultiBulk:
+			cap := val.Cap()
+			if len(b) > cap {
+				return fmt.Errorf("Error Greater than array cap")
+			}
+			for i, v := range b {
+				err := unmarshal(v, val.Index(i))
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	case reflect.String:
+		switch b := r.(type) {
+		default:
+			return fmt.Errorf("Error Not a valid Bulk value '%s'", b.Format(0))
+		case ReplyBulk:
+			v := *(*string)(unsafe.Pointer(&b))
+			val.SetString(v)
+			return nil
+		}
+	}
+	return fmt.Errorf("Error Data types are not supported '%s'", val.Kind().String())
+}
+
+// ConvertTo returns convert the base type to Reply
+func ConvertTo(i interface{}) (Reply, error) {
+	val := reflect.ValueOf(i)
+	return marshal(val)
+}
+
+func marshal(val reflect.Value) (Reply, error) {
 	switch val.Kind() {
 	case reflect.Bool:
 		if val.Bool() {
-			return ReplyInteger{'1'}
+			return ReplyInteger{'1'}, nil
 		}
-		return ReplyInteger{'0'}
+		return ReplyInteger{'0'}, nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return ReplyInteger(strconv.AppendInt(nil, val.Int(), 10))
+		return ReplyInteger(strconv.AppendInt(nil, val.Int(), 10)), nil
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return ReplyInteger(strconv.AppendUint(nil, val.Uint(), 10))
-	case reflect.Float32:
-		return ReplyBulk(strconv.AppendFloat(nil, val.Float(), 'f', -1, 32))
-	case reflect.Float64:
-		return ReplyBulk(strconv.AppendFloat(nil, val.Float(), 'f', -1, 64))
-	case reflect.Complex64, reflect.Complex128:
-		com := fmt.Sprint(val.Complex())
-		return ReplyBulk(*(*[]byte)(unsafe.Pointer(&com)))
+		return ReplyInteger(strconv.AppendUint(nil, val.Uint(), 10)), nil
 	case reflect.Interface, reflect.Ptr:
-		return convert(val.Elem())
+		return marshal(val.Elem())
 	case reflect.Map:
 		num := val.Len()
 		items := make(ReplyMultiBulk, 0, num*val.Len())
 
 		for _, k := range val.MapKeys() {
-			items = append(items, convert(k))
-			items = append(items, convert(val.MapIndex(k)))
+			item, err := marshal(k)
+			if err != nil {
+				return nil, err
+			}
+			items = append(items, item)
+			item, err = marshal(val.MapIndex(k))
+			if err != nil {
+				return nil, err
+			}
+			items = append(items, item)
 		}
-		return items
+		return items, nil
 	case reflect.Struct:
 		num := val.NumField()
 		typ := val.Type()
@@ -49,32 +218,42 @@ func convert(val reflect.Value) Reply {
 		for i := 0; i != num; i++ {
 			name := typ.Field(i).Name
 			items = append(items, ReplyBulk(*(*[]byte)(unsafe.Pointer(&name))))
-			items = append(items, convert(val.Field(i)))
+			item, err := marshal(val.Field(i))
+			if err != nil {
+				return nil, err
+			}
+			items = append(items, item)
 		}
-		return items
+		return items, nil
 	case reflect.Slice:
 		switch val.Type().Elem().Kind() {
 		case reflect.Uint8:
-			return ReplyBulk(val.Bytes())
+			return ReplyBulk(val.Bytes()), nil
 		}
 		num := val.Len()
 		items := make(ReplyMultiBulk, 0, num)
 		for i := 0; i != num; i++ {
-			items = append(items, convert(val.Index(i)))
+			item, err := marshal(val.Index(i))
+			if err != nil {
+				return nil, err
+			}
+			items = append(items, item)
 		}
-		return items
+		return items, nil
 	case reflect.Array:
 		num := val.Len()
 		items := make(ReplyMultiBulk, 0, num)
 		for i := 0; i != num; i++ {
-			items = append(items, convert(val.Index(i)))
+			item, err := marshal(val.Index(i))
+			if err != nil {
+				return nil, err
+			}
+			items = append(items, item)
 		}
-		return items
+		return items, nil
 	case reflect.String:
 		com := val.String()
-		return ReplyBulk(*(*[]byte)(unsafe.Pointer(&com)))
-	case reflect.UnsafePointer:
-		return ReplyInteger(strconv.AppendUint(nil, uint64(val.Pointer()), 10))
+		return ReplyBulk(*(*[]byte)(unsafe.Pointer(&com))), nil
 	}
-	return ReplyError(fmt.Sprintf("Error Data types are not supported '%s'", val.Kind().String()))
+	return nil, fmt.Errorf("Error Data types are not supported '%s'", val.Kind().String())
 }

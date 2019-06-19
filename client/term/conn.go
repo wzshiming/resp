@@ -23,7 +23,11 @@ func commands(cli *client.Connect) CmdFunc {
 			return "", nil
 		}
 
-		val, err := cli.Cmd(resp.Convert(cmd))
+		d, err := resp.ConvertTo(cmd)
+		if err != nil {
+			return "", err
+		}
+		val, err := cli.Cmd(d)
 		if err != nil {
 			return "", err
 		}
