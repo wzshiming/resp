@@ -48,7 +48,14 @@ func (r *Decoder) decodeData() (Reply, error) {
 		return r.decodeError()
 	}
 	r.reader.UnreadByte()
-	return r.decodeInline()
+	e, err := r.decodeInline()
+	if err != nil {
+		return nil, err
+	}
+	if e != nil {
+		return e, nil
+	}
+	return r.decodeData()
 }
 
 func (r *Decoder) decodeInline() (Reply, error) {
@@ -70,6 +77,9 @@ func (r *Decoder) decodeInline() (Reply, error) {
 		}
 		data = append(data, ReplyBulk(line[:i]))
 		line = line[i+1:]
+	}
+	if len(data) == 0 {
+		return nil, nil
 	}
 	return data, nil
 }
