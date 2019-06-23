@@ -32,11 +32,11 @@ func NewExtra(other CmdFunc) *Extra {
 		Map:   map[string]CmdFunc{},
 		Other: other,
 	}
-	e.AddCmd("quit", quit)
+	e.AddCmd("quit", e.quit)
 	return e
 }
 
-func quit(cmd ...string) (string, error) {
-	os.Exit(0)
-	return "", nil
+func (e *Extra) quit(cmd ...string) (string, error) {
+	defer os.Exit(0)
+	return e.Other(cmd...)
 }
