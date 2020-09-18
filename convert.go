@@ -239,8 +239,7 @@ func convertTo(val reflect.Value) (Reply, error) {
 		return convertTo(val.Elem())
 	case reflect.Map:
 		num := val.Len()
-		items := make(ReplyMultiBulk, 0, num*val.Len())
-
+		items := make(ReplyMultiBulk, 0, num*2)
 		for _, k := range val.MapKeys() {
 			item, err := convertTo(k)
 			if err != nil {
